@@ -1,0 +1,12 @@
+{
+  "name": "Sugam Homeo",
+  "short_name": "Sugam Homeo",
+  "description": "A calm, secure practice companion for Sugam Homeo clinic.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f9fc",
+  "theme_color": "#0877c9",
+  "icons": [
+    { "src": "/sugam-logo.png", "sizes": "520x182", "type": "image/png", "purpose": "any" }
+  ]
+}

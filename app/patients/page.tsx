@@ -1,0 +1,17 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+
+type Patient = { id: string; patient_number: string; name: string; phone: string; gender: string | null; dob: string | null };
+
+export default function PatientsPage() {
+  const router = useRouter();
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { async function load() { if (!supabase) return; const { data: session } = await supabase.auth.getSession(); if (!session.session) { router.replace("/login"); return; } const { data } = await supabase.from("patients").select("id,patient_number,name,phone,gender,dob").order("updated_at", { ascending: false }); setPatients(data || []); setLoading(false); } load(); }, [router]);
+  const filtered = useMemo(() => { const value = query.toLowerCase().trim(); return value ? patients.filter((patient) => `${patient.name} ${patient.patient_number} ${patient.phone}`.toLowerCase().includes(value)) : patients; }, [patients, query]);
+  return <main className="reports-shell"><header className="topbar"><div className="mobile-brand"><span className="mobile-mark">S</span><strong>Sugam Homeo</strong></div><div className="breadcrumb"><span>Workspace</span><b>/</b><strong>Patients</strong></div><div className="top-actions"><button className="icon-button" aria-label="Toggle theme" onClick={() => document.documentElement.classList.toggle("dark")}>☾</button><div className="top-avatar">DS</div></div></header><div className="page-content"><button className="back-link" onClick={() => router.push("/")}>← Back to overview</button><div className="welcome-row"><div><p className="eyebrow">Patient records</p><h1>Patients</h1><p className="subheading">Every patient is the beginning of a connected clinical history.</p></div><button className="primary-button" onClick={() => router.push("/?newPatient=1")}>＋ New patient</button></div><section className="panel patients-panel"><div className="panel-heading"><div><h2>Patient directory</h2><p>{patients.length} records in your clinic</p></div></div><label className="search-box"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by name, ID, or phone..." aria-label="Search patient directory" /></label>{loading ? <div className="empty-state">Loading records…</div> : <div className="patient-table"><div className="table-row table-head"><span>Patient</span><span>Contact</span><span>Age / gender</span><span>Patient ID</span><span /></div>{filtered.map((patient, index) => <div className="table-row" key={patient.id}><div className="patient-cell"><div className={`patient-avatar ${["blue", "maroon", "green", "gold"][index % 4]}`}>{patient.name.split(" ").map((part) => part[0]).join("")}</div><div><strong>{patient.name}</strong><span>{patient.patient_number}</span></div></div><span className="contact-cell">{patient.phone}</span><span className="visit-cell">{patient.gender || "Not specified"}</span><span className="visit-cell">{patient.patient_number}</span><button className="row-arrow" onClick={() => router.push(`/patients/${patient.patient_number}`)} aria-label={`Open ${patient.name}`}>→</button></div>)}{!filtered.length && <div className="empty-state">No patients match “{query}”.</div>}</div>}</section></div></main>;
+}
